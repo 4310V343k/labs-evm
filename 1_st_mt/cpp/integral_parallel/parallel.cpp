@@ -5,6 +5,15 @@
 #include <future>
 
 namespace integral_parallel {
+    namespace {
+        double weierstrass_chunk(double a, double b, std::size_t n, double x0, double h, std::size_t begin, std::size_t end) {
+            double local = 0.0;
+            for (std::size_t i = begin; i < end; ++i)
+                local += common::weierstrass(x0 + h * (i + 0.5), a, b, n);
+            return local;
+        }
+    }
+
     double integrate_weierstrass_parallel(double a, double b, std::size_t n, double x0, double x1, std::size_t steps) {
         unsigned hw = std::thread::hardware_concurrency();
         if (hw == 0) hw = 4; // fallback
@@ -28,14 +37,7 @@ namespace integral_parallel {
             std::size_t begin = start;
             std::size_t end = begin + size;
             start = end;
-            futures.emplace_back(std::async(std::launch::async, [=]() {
-                double local = 0.0;
-                for (std::size_t i = begin; i < end; ++i) {
-                    double x = x0 + h * (static_cast<double>(i) + 0.5);
-                    local += common::weierstrass(x, a, b, n);
-                }
-                return local;
-            }));
+            futures.emplace_back(std::async(std::launch::async, weierstrass_chunk, a, b, n, x0, h, begin, end));
         }
         double total = 0.0;
         for (auto &f : futures) total += f.get();
