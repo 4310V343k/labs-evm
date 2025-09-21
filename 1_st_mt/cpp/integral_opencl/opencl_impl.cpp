@@ -12,21 +12,41 @@ namespace integral_opencl {
         std::mutex g_err_mutex;
         const char *kernelSrc = R"CLC(
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-__kernel void weier_integral(
+__kernel void weier_integral_reduce(
     const double a,
     const double b,
     const int n,
     const double x0,
     const double h,
-    __global double* out
+    const ulong steps,
+    __global double* out,
+    __local double* lsum
 ) {
-    int i = get_global_id(0);
-    double x = x0 + h * (i + 0.5);
-    double sum = 0.0;
-    for (int k = 0; k < n; ++k) {
-        sum += pow(a, (double)k) * cos(3.14159265358979323846 * pow(b, (double)k) * x);
+    int gid = get_global_id(0);
+    int lid = get_local_id(0);
+    int group = get_group_id(0);
+    int group_size = get_local_size(0);
+
+    double val = 0.0;
+    if ((ulong)gid < steps) {
+        double x = x0 + h * (gid + 0.5);
+        for (int k = 0; k < n; ++k) {
+            val += pow(a, (double)k) * cos(3.14159265358979323846 * pow(b, (double)k) * x);
+        }
     }
-    out[i] = sum;
+    lsum[lid] = val;
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    for (int offset = group_size / 2; offset > 0; offset /= 2) {
+        if (lid < offset) {
+            lsum[lid] += lsum[lid + offset];
+        }
+        barrier(CLK_LOCAL_MEM_FENCE);
+    }
+
+    if (lid == 0) {
+        out[group] = lsum[0];
+    }
 }
 )CLC";
         void set_error(const std::string &msg) {
@@ -60,10 +80,12 @@ __kernel void weier_integral(
             return 0.0;
         }
 
-        cl::Kernel kernel(program, "weier_integral");
-
         double h = (x1 - x0) / static_cast<double>(steps);
-        cl::Buffer outBuf(context, CL_MEM_WRITE_ONLY, sizeof(double) * steps);
+        size_t local_size = 256;
+        size_t num_groups = (steps + local_size - 1) / local_size;
+        size_t global_size = num_groups * local_size;
+
+        cl::Buffer outBuf(context, CL_MEM_WRITE_ONLY, sizeof(double) * num_groups);
 
         double ad = a;
         double bd = b;
@@ -71,21 +93,24 @@ __kernel void weier_integral(
         double x0d = x0;
         double hd = h;
 
+        cl::Kernel kernel(program, "weier_integral_reduce");
         kernel.setArg(0, ad);
         kernel.setArg(1, bd);
         kernel.setArg(2, nd);
         kernel.setArg(3, x0d);
         kernel.setArg(4, hd);
-        kernel.setArg(5, outBuf);
+        kernel.setArg(5, static_cast<cl_ulong>(steps));
+        kernel.setArg(6, outBuf);
+        kernel.setArg(7, cl::Local(local_size * sizeof(double)));
 
-        cl::NDRange globalWorkSize(steps);
-        queue.enqueueNDRangeKernel(kernel, cl::NullRange, globalWorkSize);
+        queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(global_size), cl::NDRange(local_size));
         queue.finish();
 
-        std::vector<double> results(steps, 0.0);
-        queue.enqueueReadBuffer(outBuf, CL_TRUE, 0, sizeof(double) * steps, results.data());
+        std::vector<double> results(num_groups, 0.0);
+        queue.enqueueReadBuffer(outBuf, CL_TRUE, 0, sizeof(double) * num_groups, results.data());
 
-        double sum = 0.0; for (double v : results) sum += v;
+        double sum = 0.0;
+        for (double v : results) sum += v;
         double integral = sum * h;
         ok = true;
         return integral;
