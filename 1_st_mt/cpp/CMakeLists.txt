@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.16)
+project(weier_integral LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(ENABLE_OPENCL "Build OpenCL implementation" ON)
+option(ENABLE_OPENMP "Build OpenMP parallel implementation" ON)
+
+add_subdirectory(common)
+add_subdirectory(integral_single)
+add_subdirectory(integral_parallel)
+if(ENABLE_OPENMP)
+  add_subdirectory(integral_parallel_omp)
+  add_compile_definitions(ENABLE_OPENMP)
+endif()
+if(ENABLE_OPENCL)
+  add_subdirectory(integral_opencl)
+  add_compile_definitions(ENABLE_OPENCL)
+endif()
+add_subdirectory(app)

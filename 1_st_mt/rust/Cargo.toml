@@ -1,0 +1,11 @@
+[package]
+name = "evm_benchmark"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tabled = "0.14"
+common = { path = "./common" }
+integral_single = { path = "./integral_single" }
+integral_parallel = { path = "./integral_parallel" }
+integral_opencl = { path = "./integral_opencl" }

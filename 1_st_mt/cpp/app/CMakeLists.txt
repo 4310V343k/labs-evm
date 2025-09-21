@@ -1,0 +1,11 @@
+add_executable(weier_benchmark main.cpp)
+target_link_libraries(weier_benchmark PRIVATE common integral_single integral_parallel)
+if (ENABLE_OPENMP)
+  target_link_libraries(weier_benchmark PRIVATE integral_parallel_omp)
+endif()
+if (ENABLE_OPENCL)
+  target_link_libraries(weier_benchmark PRIVATE integral_opencl)
+endif()
+
+add_executable(quick_test quick_test.cpp)
+target_link_libraries(quick_test PRIVATE common integral_single integral_parallel)

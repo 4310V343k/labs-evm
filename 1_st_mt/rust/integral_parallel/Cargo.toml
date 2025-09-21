@@ -1,0 +1,8 @@
+[package]
+name = "integral_parallel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+common = { path = "../common" }
+rayon = "1.7"
