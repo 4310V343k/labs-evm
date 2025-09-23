@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/mpi_test.dir/link.d CMakeFiles/mpi_test.dir/mpi_test.cpp.o -o mpi_test  -Wl,-rpath,/usr/lib/x86_64-linux-gnu/openmpi/lib libintegral_mpi.a common/libcommon.a /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi_cxx.so /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so

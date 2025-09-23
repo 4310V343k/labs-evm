@@ -1,7 +1,0 @@
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/CMakeFiles/integral_mpi.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/CMakeFiles/mpi_test.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/CMakeFiles/edit_cache.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/CMakeFiles/rebuild_cache.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/common/CMakeFiles/common.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/common/CMakeFiles/edit_cache.dir
-/home/runner/work/labs-evm/labs-evm/2_mpi/build/common/CMakeFiles/rebuild_cache.dir

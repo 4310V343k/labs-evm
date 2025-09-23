@@ -1,2 +1,0 @@
-/usr/bin/ar qc libintegral_mpi.a CMakeFiles/integral_mpi.dir/mpi_parallel.cpp.o
-/usr/bin/ranlib libintegral_mpi.a
